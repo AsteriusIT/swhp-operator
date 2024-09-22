@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/AsteriusIT/stp-operator/actions/workflows/build-deploy.yml/badge.svg)](https://github.com/AsteriusIT/stp-operator/actions/workflows/build-deploy.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Helm Chart](https://img.shields.io/badge/helm%20chart-v0.0.4-blue)](https://github.com/AsteriusIT/stp-operator/releases/tag/v0.0.4)
+[![Helm Chart](https://img.shields.io/badge/helm%20chart-v0.0.5-blue)](https://github.com/AsteriusIT/stp-operator/releases/tag/v0.0.5)
 
 STP Operator is a Kubernetes operator that simplifies the management of Azure
 static websites in a Kubernetes cluster. It enables seamless access to static
@@ -46,7 +46,7 @@ Scaleway container registry. To install STP Operator, follow these steps:
 
 1. Install the STP Operator Helm chart:
    ```bash
-   helm install stp-operator oci://rg.fr-par.scw.cloud/asterius-public-helm/operators/stp-operator --version 0.0.4
+   helm install stp-operator oci://rg.fr-par.scw.cloud/asterius-public-helm/operators/stp-operator --version 0.0.5
    ```
 
    This will install STP Operator in the `default` namespace.
