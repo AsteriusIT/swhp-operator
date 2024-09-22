@@ -1,0 +1,47 @@
+name: Push Helm Chart to Scaleway
+
+on:
+  push:
+    tags:
+      - "*"
+
+env:
+  CHART_PATH: ./stp-operator
+  REGISTRY: rg.fr-par.scw.cloud
+  NAMESPACE: asterius-public-helm/operators/stp-operator
+
+jobs:
+  push-helm-chart:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
+      - name: Extract tag name
+        id: tag
+        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Package Helm chart
+        run: helm package ${{ env.CHART_PATH }} --version ${{ steps.tag.outputs.TAG }}
+
+      - name: Install Scaleway CLI
+        run: |
+          curl -fsSL https://github.com/scaleway/scaleway-cli/releases/download/v2.5.1/scaleway-cli_2.5.1_linux_amd64 -o scaleway-cli
+          chmod +x scaleway-cli
+          sudo mv scaleway-cli /usr/local/bin/scw
+
+      - name: Login to Scaleway registry
+        run: |
+          scw registry login --region fr-par
+        env:
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+
+      - name: Push Helm chart
+        run: |
+          helm registry login ${{ env.REGISTRY }} --username=${{ secrets.SCW_ACCESS_KEY }} --password=${{ secrets.SCW_SECRET_KEY }}
+          helm push *.tgz oci://${{ env.REGISTRY }}/${{ env.NAMESPACE }}

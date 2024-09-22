@@ -1,0 +1,25 @@
+image:
+  repository: rg.fr-par.scw.cloud/pe-arcturus/operators/azstatichost
+  pullPolicy: IfNotPresent
+  tag: 1.0.1
+
+podSecurityContext:
+  fsGroup: 2000
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+resources:
+  limits:
+    cpu: 512m
+    memory: 128Mi
+    ephemeral-storage: 1Gi
+  requests:
+    cpu: 100m
+    memory: 64Mi
+    ephemeral-storage: 200Mi

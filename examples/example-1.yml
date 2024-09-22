@@ -1,0 +1,9 @@
+apiVersion: asterius.fr/v1
+kind: AzureStaticHost
+metadata:
+  name: test
+spec:
+  host: test.example.org
+  source:
+    host: thisisatest.z28.web.core.windows.net
+    path: /test

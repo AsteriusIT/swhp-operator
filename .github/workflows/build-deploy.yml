@@ -1,0 +1,38 @@
+name: Build and Push Image
+
+on:
+  push:
+    tags:
+      - "*"
+
+env:
+  REGISTRY: rg.fr-par.scw.cloud
+  IMAGE_NAME: asterius-public/operators/azstatichost
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to Scaleway registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.SCW_ACCESS_KEY }}
+          password: ${{ secrets.SCW_SECRET_KEY }}
+
+      - name: Extract tag name
+        id: tag
+        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.TAG }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
