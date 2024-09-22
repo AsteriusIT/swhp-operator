@@ -28,18 +28,12 @@ jobs:
       - name: Package Helm chart
         run: helm package ${{ env.CHART_PATH }} --version ${{ steps.tag.outputs.TAG }}
 
-      - name: Install Scaleway CLI
-        run: |
-          curl -fsSL https://github.com/scaleway/scaleway-cli/releases/download/v2.5.1/scaleway-cli_2.5.1_linux_amd64 -o scaleway-cli
-          chmod +x scaleway-cli
-          sudo mv scaleway-cli /usr/local/bin/scw
-
       - name: Login to Scaleway registry
-        run: |
-          scw registry login --region fr-par
-        env:
-          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
-          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.SCW_ACCESS_KEY }}
+          password: ${{ secrets.SCW_SECRET_KEY }}
 
       - name: Push Helm chart
         run: |
