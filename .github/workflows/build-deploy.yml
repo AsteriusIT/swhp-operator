@@ -36,3 +36,25 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.TAG }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            
+  push-helm-chart:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4.2.0
+
+      - name: Extract tag name
+        id: tag
+        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Package Helm chart
+        run: helm package ${{ env.CHART_PATH }} --version ${{ steps.tag.outputs.TAG }}
+
+      - name: Push Helm chart
+        run: |
+          helm registry login ${{ env.REGISTRY }} --username=${{ secrets.SCW_ACCESS_KEY }} --password=${{ secrets.SCW_SECRET_KEY }}
+          helm push *.tgz oci://${{ env.REGISTRY }}/${{ env.NAMESPACE }}
