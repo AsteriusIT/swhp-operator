@@ -8,7 +8,7 @@ on:
 env:
   CHART_PATH: ./stp-operator
   REGISTRY: rg.fr-par.scw.cloud
-  NAMESPACE: asterius-public-helm/operators/stp-operator
+  NAMESPACE: asterius-public-helm/operators
 
 jobs:
   push-helm-chart:
@@ -27,13 +27,6 @@ jobs:
 
       - name: Package Helm chart
         run: helm package ${{ env.CHART_PATH }} --version ${{ steps.tag.outputs.TAG }}
-
-      - name: Login to Scaleway registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.SCW_ACCESS_KEY }}
-          password: ${{ secrets.SCW_SECRET_KEY }}
 
       - name: Push Helm chart
         run: |
