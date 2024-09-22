@@ -12,7 +12,7 @@ API_RETRY_MULTIPLIER = 2
 NGINX_DEPLOYMENT_NAME = "nginx-proxy"
 
 
-def create_ingress(networking_v1_api, namespace, name, host):
+def create_ingress(networking_v1_api, namespace, name, host, svc_name):
 
     body = {
         "apiVersion": "networking.k8s.io/v1",
@@ -32,7 +32,7 @@ def create_ingress(networking_v1_api, namespace, name, host):
                             {
                                 "backend": {
                                     "service": {
-                                        "name": NGINX_DEPLOYMENT_NAME,
+                                        "name": svc_name,
                                         "port": {"number": 80},
                                     }
                                 },
@@ -63,19 +63,44 @@ def delete_ingress(client, namespace, name):
 
 # Utility functions
 def get_nginx_config(spec):
+
+    provider: str = spec["provider"]
+    ingress: str = spec["ingress"]
+
+    host: str = ""
+    subpath: str = ""
+    protocol: str = "https"
+
+    if provider == "azure":
+        account_name: str = spec["azure"]["accountName"]
+        dns_zone_id: str = spec["azure"]["dnsZoneId"]
+
+        host = f"{account_name}.z{dns_zone_id}.web.core.windows.net"
+        subpath = spec["azure"].get("subpath", "")
+    elif provider == "aws":
+        bucket: str = spec["aws"]["bucketName"]
+        region: str = spec["aws"]["region"]
+
+        host = f"{bucket}.s3-website.{region}.amazonaws.com"
+        subpath = spec["aws"].get("subpath", "")
+
+        protocol = "http"
+
+    full_host = f"{host}{subpath}".strip("/")
+
     return f"""
     server {{
         listen 80;
-        server_name {spec['host']};
+        server_name {ingress};
         location / {{
-            proxy_pass https://{spec['source']['host']}{spec['source'].get('path', '')}/;
-            proxy_set_header Host {spec['source']['host']};
+            proxy_pass {protocol}://{full_host}/;
+            proxy_set_header Host {host};
             proxy_http_version 1.1;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
 
-            proxy_redirect https://{spec['source']['host']}{spec['source'].get('path', '')}/ /;
+            proxy_redirect {protocol}://{full_host}/ /;
         }}
     }}
     """
@@ -154,7 +179,14 @@ def update_config_map(api, namespace, name, body):
             raise e
 
 
-@kopf.on.create("asterius.fr", "v1", "azurestatichosts")
+def get_proxy_service(spec) -> str:
+    if "proxy" in spec and "service" in spec["proxy"]:
+        return spec["proxy"]["service"]
+
+    return NGINX_DEPLOYMENT_NAME
+
+
+@kopf.on.create("asterius.fr", "v1", "statichosts")
 def create_azure_static_host(body, spec, name, namespace, logger, **kwargs):
     api = kubernetes.client.CoreV1Api()
     apps_api = kubernetes.client.AppsV1Api()
@@ -166,10 +198,12 @@ def create_azure_static_host(body, spec, name, namespace, logger, **kwargs):
     config_map = get_config_map(name, namespace, nginx_config)
     create_config_map(api, namespace, config_map)
 
-    # Create an Ingress for the AzureStaticHost
-    create_ingress(networking_v1_api, namespace, name, spec["host"])
+    # Create an Ingress for the StaticHost
+    create_ingress(
+        networking_v1_api, namespace, name, spec["ingress"], get_proxy_service(spec)
+    )
 
-    logger.info(f"Creating AzureStaticHost {name}")
+    logger.info(f"Creating StaticHost {name}")
 
     for kind, list_func in [
         ("Deployment", apps_api.list_namespaced_deployment),
@@ -186,10 +220,10 @@ def create_azure_static_host(body, spec, name, namespace, logger, **kwargs):
                 apps_api, workload, kind, name, namespace, patch_workload, logger
             )
 
-    logger.info(f"AzureStaticHost {name} created and Nginx configurations updated")
+    logger.info(f"StaticHost {name} created and Nginx configurations updated")
 
 
-@kopf.on.delete("asterius.fr", "v1", "azurestatichosts")
+@kopf.on.delete("asterius.fr", "v1", "statichosts")
 def delete_azure_static_host(body, spec, name, namespace, logger, **kwargs):
     api = kubernetes.client.CoreV1Api()
     apps_api = kubernetes.client.AppsV1Api()
@@ -254,11 +288,11 @@ def delete_azure_static_host(body, spec, name, namespace, logger, **kwargs):
 
     delete_ingress(kubernetes.client, namespace, name)
 
-    logger.info(f"AzureStaticHost {name} deleted and Nginx configurations removed")
+    logger.info(f"StaticHost {name} deleted and Nginx configurations removed")
 
 
 # On update
-@kopf.on.update("asterius.fr", "v1", "azurestatichosts")
+@kopf.on.update("asterius.fr", "v1", "statichosts")
 def update_azure_static_host(body, spec, name, namespace, logger, **kwargs):
     api = kubernetes.client.CoreV1Api()
     apps_api = kubernetes.client.AppsV1Api()
@@ -285,4 +319,4 @@ def update_azure_static_host(body, spec, name, namespace, logger, **kwargs):
                 apps_api, workload, kind, workload.metadata.name, namespace, logger
             )
 
-    logger.info(f"AzureStaticHost {name} updated and Nginx configurations updated")
+    logger.info(f"StaticHost {name} updated and Nginx configurations updated")

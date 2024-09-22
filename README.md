@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/AsteriusIT/stp-operator/actions/workflows/build-deploy.yml/badge.svg)](https://github.com/AsteriusIT/stp-operator/actions/workflows/build-deploy.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Helm Chart](https://img.shields.io/badge/helm%20chart-v0.0.3-blue)](https://github.com/AsteriusIT/stp-operator/releases/tag/v0.0.3)
+[![Helm Chart](https://img.shields.io/badge/helm%20chart-v0.0.4-blue)](https://github.com/AsteriusIT/stp-operator/releases/tag/v0.0.4)
 
 STP Operator is a Kubernetes operator that simplifies the management of Azure
 static websites in a Kubernetes cluster. It enables seamless access to static
@@ -15,7 +15,7 @@ websites hosted in Azure Storage accounts through Kubernetes ingresses.
 - Generate the necessary Nginx configuration, ConfigMap, and Nginx Ingress
   resources
 - Seamlessly route requests to the appropriate Azure Storage account endpoint
-- Manage Azure static host resources using custom resource definitions (CRDs)
+- Manage Static host resources using custom resource definitions (CRDs)
 
 ## How It Works
 
@@ -27,10 +27,10 @@ Storage account.
 
 The operator is written in Python and uses the `kopf` framework for Kubernetes
 operator development. It follows the declarative configuration approach, where
-you define the desired state of your Azure static host using the
-`AzureStaticHost` custom resource. The operator then continuously reconciles the
-actual state with the desired state, ensuring that the Nginx server and ingress
-are properly configured.
+you define the desired state of your Static host using the `AzureStaticHost`
+custom resource. The operator then continuously reconciles the actual state with
+the desired state, ensuring that the Nginx server and ingress are properly
+configured.
 
 ## Installation
 
@@ -46,28 +46,46 @@ Scaleway container registry. To install STP Operator, follow these steps:
 
 1. Install the STP Operator Helm chart:
    ```bash
-   helm install stp-operator oci://rg.fr-par.scw.cloud/asterius-public-helm/operators/stp-operator --version 0.0.2
+   helm install stp-operator oci://rg.fr-par.scw.cloud/asterius-public-helm/operators/stp-operator --version 0.0.4
    ```
 
    This will install STP Operator in the `default` namespace.
 
 ## Usage
 
-### Creating an Azure Static Host
+### Creating a Static Host
 
-To create an Azure static host, you need to define an `AzureStaticHost` custom
+To create an Static host, you need to define an `StaticHost` custom resource.
+Here's an example:
+
+```yaml
+apiVersion: asterius.fr/v1
+kind: StaticHost
+metadata:
+  name: azure
+spec:
+  provider: azure
+  ingress: example.asterius.fr
+  azure:
+    accountName: test
+    dnsZoneId: 28
+    subpath: /
+```
+
+To create an AWS static host, you need to define an `StaticHost` custom
 resource. Here's an example:
 
 ```yaml
-apiVersion: stp.operator.com/v1alpha1
-kind: AzureStaticHost
+apiVersion: asterius.fr/v1
+kind: StaticHost
 metadata:
-  name: mystatichost
+  name: aws
 spec:
-    host: mystatichost.com
-    source:
-        host: mystatichost.z6.web.core.windows.net
-        path: /mywebsite
+  provider: aws
+  ingress: example.asterius.fr
+  aws:
+    bucketName: test
+    region: eu-west-3
 ```
 
 Save this YAML to a file named `statichost.yaml` and apply it to your Kubernetes
@@ -80,9 +98,9 @@ kubectl apply -f statichost.yaml
 STP Operator will create the necessary Nginx server, configuration, and ingress
 resources to serve the static website from the specified Azure Storage account.
 
-### Configuring Azure Static Host
+### Configuring Static Host
 
-You can configure the Azure static host by modifying the `spec` section of the
+You can configure the Static host by modifying the `spec` section of the
 `AzureStaticHost` custom resource. Update the desired configuration in the YAML
 file and apply the changes:
 
@@ -92,6 +110,26 @@ kubectl apply -f statichost.yaml
 
 STP Operator will handle the necessary updates to the Nginx server and ingress
 resources.
+
+### Custom Nginx proxy
+
+You can setup the name of the Nginx service:
+
+```yaml
+apiVersion: asterius.fr/v1
+kind: StaticHost
+metadata:
+  name: azure
+spec:
+  provider: azure
+  ingress: example.asterius.fr
+  azure:
+    accountName: test
+    dnsZoneId: 28
+    subpath: /
+  proxy:
+    service: my-nginx-service
+```
 
 ## Contributing
 

@@ -1,0 +1,55 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: statichosts.asterius.fr
+spec:
+  group: asterius.fr
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                provider:
+                  type: string
+                ingress:
+                  type: string
+                azure:
+                  type: object
+                  properties:
+                    accountName:
+                      type: string
+                    dnsZoneId:
+                      type: integer
+                    subpath:
+                      type: string
+                aws:
+                  type: object
+                  properties:
+                    bucketName:
+                      type: string
+                    region:
+                      type: string
+                    subpath:
+                      type: string
+                proxy:
+                  type: object
+                  properties:
+                    service:
+                      type: string
+                      default: "nginx"
+              required:
+                - provider
+                - ingress
+  scope: Namespaced
+  names:
+    plural: statichosts
+    singular: statichost
+    kind: StaticHost
+    shortNames:
+      - ash
