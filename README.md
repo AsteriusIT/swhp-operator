@@ -1,10 +1,10 @@
-# STP Operator
+# SWHP Operator
 
-[![Build Status](https://github.com/AsteriusIT/stp-operator/actions/workflows/build-deploy.yml/badge.svg)](https://github.com/AsteriusIT/stp-operator/actions/workflows/build-deploy.yml)
+[![Build Status](https://github.com/AsteriusIT/swhp-operator/actions/workflows/build-deploy.yml/badge.svg)](https://github.com/AsteriusIT/swhp-operator/actions/workflows/build-deploy.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Helm Chart](https://img.shields.io/badge/helm%20chart-v0.0.5-blue)](https://github.com/AsteriusIT/stp-operator/releases/tag/v0.0.5)
+[![Helm Chart](https://img.shields.io/badge/helm%20chart-v0.0.5-blue)](https://github.com/AsteriusIT/swhp-operator/releases/tag/v0.0.5)
 
-STP Operator is a Kubernetes operator that simplifies the management of Azure
+SWHP Operator (Static Web Host Proxy) is a Kubernetes operator that simplifies the management of Azure
 static websites in a Kubernetes cluster. It enables seamless access to static
 websites hosted in Azure Storage accounts through Kubernetes ingresses.
 
@@ -19,7 +19,7 @@ websites hosted in Azure Storage accounts through Kubernetes ingresses.
 
 ## How It Works
 
-STP Operator extends the Kubernetes API by introducing a custom resource
+SWHP Operator extends the Kubernetes API by introducing a custom resource
 definition (CRD) named `AzureStaticHost`. When you create or update an
 `AzureStaticHost` resource, the operator watches for these changes and takes the
 necessary actions to configure the Nginx server and route requests to the Azure
@@ -41,15 +41,15 @@ configured.
 
 ### Installing with Helm
 
-STP Operator is deployed using a Helm chart. The Helm chart is published in the
-Scaleway container registry. To install STP Operator, follow these steps:
+SWHP Operator is deployed using a Helm chart. The Helm chart is published in the
+Scaleway container registry. To install SWHP Operator, follow these steps:
 
-1. Install the STP Operator Helm chart:
+1. Install the SWHP Operator Helm chart:
    ```bash
-   helm install stp-operator oci://rg.fr-par.scw.cloud/asterius-public-helm/operators/stp-operator --version 0.0.5
+   helm install swhp-operator oci://rg.fr-par.scw.cloud/asterius-public-helm/operators/swhp-operator --version 0.0.5
    ```
 
-   This will install STP Operator in the `default` namespace.
+   This will install SWHP Operator in the `default` namespace.
 
 ## Usage
 
@@ -95,7 +95,7 @@ cluster:
 kubectl apply -f statichost.yaml
 ```
 
-STP Operator will create the necessary Nginx server, configuration, and ingress
+SWHP Operator will create the necessary Nginx server, configuration, and ingress
 resources to serve the static website from the specified Azure Storage account.
 
 ### Configuring Static Host
@@ -108,7 +108,7 @@ file and apply the changes:
 kubectl apply -f statichost.yaml
 ```
 
-STP Operator will handle the necessary updates to the Nginx server and ingress
+SWHP Operator will handle the necessary updates to the Nginx server and ingress
 resources.
 
 ### Custom Nginx proxy

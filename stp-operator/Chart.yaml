@@ -1,5 +1,5 @@
 apiVersion: v2
-name: stp-operator
+name: swhp-operator
 description: Static host Proxy Operator
 
 # A chart can be either an 'application' or a 'library' chart.
