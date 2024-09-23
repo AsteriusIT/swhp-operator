@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "stp-operator.name" -}}
+{{- define "swhp-operator.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "stp-operator.fullname" -}}
+{{- define "swhp-operator.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "stp-operator.chart" -}}
+{{- define "swhp-operator.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "stp-operator.labels" -}}
-helm.sh/chart: {{ include "stp-operator.chart" . }}
-{{ include "stp-operator.selectorLabels" . }}
+{{- define "swhp-operator.labels" -}}
+helm.sh/chart: {{ include "swhp-operator.chart" . }}
+{{ include "swhp-operator.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,14 +45,14 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "stp-operator.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "stp-operator.name" . }}
+{{- define "swhp-operator.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "swhp-operator.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "stp-operator.serviceAccountName" -}}
-{{- default (include "stp-operator.fullname" .) .Values.serviceAccount.name }}
+{{- define "swhp-operator.serviceAccountName" -}}
+{{- default (include "swhp-operator.fullname" .) .Values.serviceAccount.name }}
 {{- end }}
