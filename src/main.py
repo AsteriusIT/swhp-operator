@@ -3,6 +3,7 @@ import kopf
 import kubernetes
 from kubernetes.client.rest import ApiException
 from tenacity import retry, stop_after_attempt, wait_exponential
+from static_proxy import create_nginx_deployment
 
 # Constants
 LABEL_SELECTOR = "asterius.fr/proxy=true"
@@ -320,3 +321,78 @@ def update_azure_static_host(body, spec, name, namespace, logger, **kwargs):
             )
 
     logger.info(f"StaticHost {name} updated and Nginx configurations updated")
+
+
+@kopf.on.create("asterius.fr", "v1", "staticproxies")
+def create_static_proxy(spec, name, namespace, logger, **kwargs):
+    logger.info(f"Creating StaticProxy: {name}")
+
+    # Create Nginx deployment
+    create_nginx_deployment(name, namespace, spec)
+
+    # Create Service
+    core_v1 = kubernetes.client.CoreV1Api()
+    service = kubernetes.client.V1Service(
+        metadata=kubernetes.client.V1ObjectMeta(name=name),
+        spec=kubernetes.client.V1ServiceSpec(
+            selector={"app": name},
+            ports=[kubernetes.client.V1ServicePort(port=80, target_port=80)],
+        ),
+    )
+    core_v1.create_namespaced_service(namespace, service)
+
+    # Create Ingress if TLS is enabled
+    if spec.get("tls", {}).get("enabled", False):
+        networking_v1 = kubernetes.client.NetworkingV1Api()
+        ingress = kubernetes.client.V1Ingress(
+            metadata=kubernetes.client.V1ObjectMeta(name=name),
+            spec=kubernetes.client.V1IngressSpec(
+                tls=[
+                    kubernetes.client.V1IngressTLS(
+                        hosts=[spec["domain"]], secret_name=spec["tls"]["secretName"]
+                    )
+                ],
+                rules=[
+                    kubernetes.client.V1IngressRule(
+                        host=spec["domain"],
+                        http=kubernetes.client.V1HTTPIngressRuleValue(
+                            paths=[
+                                kubernetes.client.V1HTTPIngressPath(
+                                    path="/",
+                                    path_type="Prefix",
+                                    backend=kubernetes.client.V1IngressBackend(
+                                        service=kubernetes.client.V1IngressServiceBackend(
+                                            name=name,
+                                            port=kubernetes.client.V1ServiceBackendPort(
+                                                number=80
+                                            ),
+                                        )
+                                    ),
+                                )
+                            ]
+                        ),
+                    )
+                ],
+            ),
+        )
+        networking_v1.create_namespaced_ingress(namespace, ingress)
+
+    return {"message": f"StaticProxy {name} created successfully"}
+
+
+@kopf.on.delete("asterius.fr", "v1", "staticproxies")
+def delete_fn(spec, name, namespace, logger, **kwargs):
+    logger.info(f"Deleting StaticProxy: {name}")
+
+    # Delete associated resources
+    apps_v1 = kubernetes.client.AppsV1Api()
+    core_v1 = kubernetes.client.CoreV1Api()
+    networking_v1 = kubernetes.client.NetworkingV1Api()
+
+    apps_v1.delete_namespaced_deployment(name, namespace)
+    core_v1.delete_namespaced_service(name, namespace)
+
+    if spec.get("tls", {}).get("enabled", False):
+        networking_v1.delete_namespaced_ingress(name, namespace)
+
+    return {"message": f"StaticProxy {name} deleted successfully"}

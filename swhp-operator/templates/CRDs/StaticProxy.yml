@@ -1,0 +1,53 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: staticproxies.asterius.fr
+spec:
+  group: asterius.fr
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                nginxVersion:
+                  type: string
+                  description: "The version of Nginx to deploy"
+                  default: "latest"
+                replicas:
+                  type: integer
+                  description: "Number of Nginx replicas to deploy"
+                  default: 1
+                resources:
+                  type: object
+                  properties:
+                    requests:
+                      type: object
+                      properties:
+                        cpu:
+                          type: string
+                          default: "100m"
+                        memory:
+                          type: string
+                          default: "128Mi"
+                    limits:
+                      type: object
+                      properties:
+                        cpu:
+                          type: string
+                          default: "200m"
+                        memory:
+                          type: string
+                          default: "256Mi"
+  scope: Namespaced
+  names:
+    plural: staticproxies
+    singular: staticproxy
+    kind: StaticProxy
+    shortNames:
+      - sp
