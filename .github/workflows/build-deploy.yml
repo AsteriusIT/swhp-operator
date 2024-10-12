@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: rg.fr-par.scw.cloud
-  IMAGE_NAME: asterius-public/operators/azstatichost
+  IMAGE_NAME: asterius-public/operators/swhp-operator
   NAMESPACE: asterius-public-helm/operators
   CHART_PATH: ./swhp-operator
 
