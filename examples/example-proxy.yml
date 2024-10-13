@@ -4,4 +4,4 @@ metadata:
   name: public
 spec:
   nginxVersion: "1.21"
-  replicas: 2
+  replicas: 1

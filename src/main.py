@@ -379,6 +379,36 @@ def create_static_proxy(spec, name, namespace, logger, **kwargs):
 
     return {"message": f"StaticProxy {name} created successfully"}
 
+@kopf.on.update('asterius.fr', 'v1', 'staticproxies')
+def update_fn(spec, old, new, name, namespace, logger, **kwargs):
+    logger.info(f"Updating StaticProxy: {name}")
+    
+    logger.info(f"Updating resources for StaticProxy: {name}")
+    apps_v1 = kubernetes.client.AppsV1Api()
+        
+    # Prepare the patch
+    patch = {
+        "spec": {
+            "template": {
+                "spec": {
+                    "containers": [{
+                        "name": "nginx",
+                        "image": f"nginx:{spec.get('nginxVersion', 'latest')}",
+                        "resources": spec.get("resources", {})
+                    }]
+                }
+            }
+        }
+    }
+    
+    # Patch the deployment
+    apps_v1.patch_namespaced_deployment(
+        name=name,
+        namespace=namespace,
+        body=patch
+    )
+
+
 
 @kopf.on.delete("asterius.fr", "v1", "staticproxies")
 def delete_fn(spec, name, namespace, logger, **kwargs):
